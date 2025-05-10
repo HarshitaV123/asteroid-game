@@ -87,3 +87,56 @@ class Player(object):
             self.y = height
         elif self.y > height + 50:
             self.y = 0
+
+class Bullet(object):
+    def __init__(self):
+        self.point = player.head
+        self.x, self.y = self.point
+        self.w = 4
+        self.h = 4
+        self.c = player.cosine
+        self.s = player.sine
+        self.xv = self.c * 10
+        self.yv = self.s * 10
+
+    def move(self):
+        self.x += self.xv
+        self.y -= self.yv
+    
+    def draw(self,window):
+        pygame.draw.rect(window, (255,255,255), [self.x,self.y,self.w, self.h])
+
+    def checkOffScreen(self):
+        if self.x < -50 or self.x > width or self.y < - 50 or self.y > height:
+            return True
+
+class asteroid(object):
+    def __init__(self,rank):
+        self.rank = rank
+        if self.rank == 1:
+            self.image = asteroid_small
+        elif self.rank == 2:
+            self.image = asteroid_med
+        else:
+            self.image = asteroid_big
+        self.w = 50*rank
+        self.h = 50*rank
+        self.randomPoint = random.choice([(random.randrange(0,width-self.w),random.choice([0, height - self.h])),(random.choice([-1*self.w-5,width+5]),random.randrange(0,height-self.h))])
+        self.x, self.y = self.randomPoint
+        if self.x < width//2:
+            self.xdir = 1
+        else:
+            self.xdir = -1
+        if self.y < height//2:
+            self.ydir = 1
+        else:
+            self.ydir = -1
+        self.xv = self.xdir * random.randrange(1,3)
+        self.yv = self.ydir * random.randrange(1,3)
+
+    def draw(self.window):
+        window.blit(self.image, (self.x, self.y))
+
+        
+
+player = Player()
