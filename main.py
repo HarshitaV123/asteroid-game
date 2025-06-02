@@ -31,6 +31,16 @@ game_over = False
 score = 0
 lives = 3
 high_score = 0
+rapid_fire = False
+rfStart = -1
+isSoundOn = True
+player_bullets = []
+asteroids = []
+count = 0
+stars = []
+aliens = []
+alien_bullets = []
+run = True
 
 
 class Player(object):
@@ -229,6 +239,134 @@ def redrawWindow():
     playagain_txt = font.render ("Press Tab to play again",1, (255,255,255))
     score_txt = font.render ("Score: " + str(score),1, (255,255,255))
     highscore_txt = font.render ("High Score: " + str(score),1, (255,255,255))
+    player.draw(window)
+    for a in asteroids:
+        a.draw(window)
+    for b in player_bullets:
+        b.draw(window)
+    for s in stars:
+        s.draw(window)
+    for a in aliens:
+        a.draw(window)
+    for a in alien_bullets:
+        a.draw(window)
+    if rapid_fire:
+        pygame.draw.rect(window, (0,0,0),[width//2-51, 19, 102, 22])
+        pygame.draw.rect(window,(255,255,255),[width//2 - 50, 20, 100-100*(count-rfStart)/500,20])
+    if game_over:
+        window.blit(playagain_txt, (width//2 - playagain_txt.get_width()//2, height//2 - playagain_txt.get_height()//2))
+    window.blit(score_txt, (width-score_txt.get_width()-25,25))
+    window.blit(lives_txt, (25,25))
+    window.blit(highscore_txt, (width - highscore_txt.get_width()-25, 35 + score_txt.get_height()))
+    pygame.display.update()
+
 
 
 player = Player()
+while run:
+    clock.tick(60)
+    count += 1
+    if not game_over:
+        if count % 50 == 0:
+            ran = random.choice([1,1,1,2,2,3])
+            asteroids.append(asteroid(ran))
+        if count % 1000 == 0:
+            stars.append(Star())
+        if count % 750 == 0:
+            aliens.append(Alien())
+        for i, a in enumerate(aliens):
+            a.x += a.xv
+            a.y += a.yv
+            if a.x > width + 150 or a.x + a.w < - 100 or a.y > height + 150 or a.y + a.h < -100:
+                aliens.pop(i)
+            if count % 60 == 0:
+                alien_bullets.append(AlienBullet(a.x+a.w//2,a.y+a.h//2))
+            for b in player_bullets:
+                if (b.x >= a.x and b.x <= a.x + a.w) or b.x + b.w >= a.x and b.x + b.w <= a.x +a.w:
+                    if (b.y >= a.y and b.y <= a.y + a.h) or b.y +b.h >= a.y and b.y + b.h <= a.y + a.h:
+                        aliens.pop(i)
+                        if isSoundOn:
+                            bangLarge.play()
+                        score += 50
+                        break
+        for i, a in enumerate(alien_bullets):
+            a.x += a.xv
+            a.y += a.yv
+            if (a.x>=player.x-player.w//2 and a.x <= player.x + player.w//2) or a.x + a.w >= player.x - player.w//2 and a.x + a.w <= player.x + player.w//2:
+                if (a.y >= player.y - player.h//2 and a.y <= player.y + player.h//2) or a.y + a.h >= player.y - player.h//2 and a.y + a.h <= player.y + player.h//2:
+                    lives -= 1
+                    alien_bullets.pop(i)
+                    break
+        player.updateLocation()
+        for b in player_bullets:
+            b.move()
+            if b.checkOffScreen():
+                player_bullets.pop(player_bullets.index(b))
+        for a in asteroids:
+            a.x += a.xv
+            a.y += a.yv
+            if (a.x>=player.x-player.w//2 and a.x <= player.x + player.w//2) or a.x + a.w >= player.x - player.w//2 and a.x + a.w <= player.x + player.w//2:
+                if (a.y >= player.y - player.h//2 and a.y <= player.y + player.h//2) or a.y + a.h >= player.y - player.h//2 and a.y + a.h <= player.y + player.h//2:
+                    lives -= 1
+                    asteroids.pop(asteroids.index(a))
+                    break
+            for p in player_bullets:
+                if (p.x >= a.x and p.x <= a.x + a.w) or p.x + p.w >= a.x and p.x + p.w <= a.x +a.w:
+                    if (p.y >= a.y and p.y <= a.y + a.h) or p.y +p.h >= a.y and p.y + p.h <= a.y + a.h:
+                        if (a.rank == 3):
+                            if isSoundOn:
+                                bangLarge.play()
+                            score += 10
+                            na1 = asteroid(2)
+                            na2 = asteroid(2)
+                            na1.x = a.x
+                            na2.x = a.x
+                            na1.y = a.y
+                            na2.y = a.y
+                            asteroids.append(na1)
+                            asteroids.append(na2)
+                        elif a.rank == 2:
+                            if isSoundOn:
+                                bangSmall.play()
+                            score += 20
+                            na1 = asteroid(1)
+                            na2 = asteroid(1)
+                            na1.x = a.x
+                            na2.x = a.x
+                            na1.y = a.y
+                            na2.y = a.y
+                            asteroids.append(na1)
+                            asteroids.append(na2)
+                        else:
+                            score += 30
+                            if isSoundOn:
+                                bangSmall.play()
+                        asteroids.pop(asteroids.index(a))
+                        player_bullets.pop(player_bullets.index(p))
+                        break
+        for s in stars:
+            s.x += s.xv
+            s.y += s.yv
+            if s.x < - 100 - s.w or s.x > width + 100 or s.y > height + 100 or s.y < -100 - s.h:
+                stars.pop(stars.index(s))
+                break
+            for b in player_bullets:
+                if (b.x >= s.x and b.x <= s.x + s.w) or b.x + b.w >= s.x and b.x + b.w <= s.x +s.w:
+                    if (b.y >= s.y and b.y <= s.y + s.h) or b.y +b.h >= s.y and b.y + b.h <= s.y + s.h:
+                        rapid_fire = True
+                        rfStart = count
+                        stars.pop(stars.index(s))
+                        player_bullets.pop(player_bullets.index(b))
+                        break
+        if lives <= 0:
+            game_over = True
+        if rfStart != -1:
+            if count - rfStart > 500:
+                rapid_fire = False
+                rfStart = -1
+
+        
+
+
+
+        
