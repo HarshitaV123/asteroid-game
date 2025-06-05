@@ -365,6 +365,44 @@ while run:
                 rapid_fire = False
                 rfStart = -1
 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            player.turnLeft()
+        if keys[pygame.K_RIGHT]:
+            player.turnRight()
+        if keys[pygame.K_UP]:
+            player.moveForward()
+        if keys[pygame.K_SPACE]:
+            if rapid_fire:
+                player_bullets.append(Bullet())
+                if isSoundOn:
+                    shoot.play()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                if not game_over:
+                    if not rapid_fire:
+                        player_bullets.append(Bullet())
+                        if isSoundOn:
+                            shoot.play()
+            if event.key == pygame.K_m:
+                isSoundOn = not isSoundOn
+            if event.key == pygame.K_TAB:
+                if game_over:
+                    game_over = False
+                    lives = 3
+                    asteroids.clear()
+                    aliens.clear()
+                    alien_bullets.clear()
+                    stars.clear()
+                    if score > high_score:
+                        high_score = score
+                    score = 0
+    redrawWindow()
+
+
         
 
 
